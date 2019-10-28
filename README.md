@@ -1,11 +1,11 @@
 # HLS-m3u8-Custom-Encryption
-#iOSHLS  M3U8 自定义AES-128钥匙串或链接解密流程（播放，下载，下载本地后播放）
+# iOSHLS  M3U8 自定义AES-128钥匙串或链接解密流程（播放，下载，下载本地后播放）
 
 其实理论上来说苹果支持原生直接播放 AES-128加密的，只要符合苹果的加密标准但是在实际使用过程中，因为有安卓、H5、或者基于已有的接口数据，或是想要自定义钥匙串保密方式，在或者想要加密播放加密链接，加密钥匙串链接，基于以上的种种要求，直接用AVPlay 显然不能满足所有的要求，所以苹果在加入了一个新的Api 用来重定向播放链接。
 
 网上对于HLS 加密的资料比较少，尤其是对加密过后的HLS 链接本地下载，本地播放就更少了，我也是摸着石头过河，这些是我总结的一些资料，和我自己整个的学习过程
 
-###1、基础篇:如何播放未加密的HLS M3U8 音频或视频
+### 1、基础篇:如何播放未加密的HLS M3U8 音频或视频
 
 以下我以音频举例子视频其实一样就是把AVPlayer 的layer 加到View上，网上的例子很多不做赘述
 
@@ -40,7 +40,7 @@ gear0/prog_index.m3u8
 ```
 音频头包含播放的链接和内容AVPlayer会自动匹配
 
-###2、进阶篇:如何播放加密的HLS M3U8 音频或视频
+### 2、进阶篇:如何播放加密的HLS M3U8 音频或视频
 其实加密和未加密的区别主要在于头文件的不同
 这个是有关苹果对于标准HLS链接的要求
 https://developer.apple.com/documentation/http_live_streaming/about_the_common_media_application_format_with_http_live_streaming?language=objc
@@ -88,7 +88,7 @@ Content-Length: 17
 但是钥匙串的长度不对正常的钥匙串是16,七牛的钥匙串长度为17，通过下钥匙串发现后面多一个"\n"导致的那么我们就要去除这个 "\n" 把它变成一个正产的链接,直接用AVPlayer播放系统也会报错，会返回钥匙串长度错误，下面我们就通过重定向来去除
 
 
-####(1) 重定向播放链接 AVAssetResourceLoader
+#### (1) 重定向播放链接 AVAssetResourceLoader
 
 通过AVURLAsset属性中有个resourceLoader,设置该属性的代理，当网络请求错误后，服务器会回调这个代理的重定向方法，我们可以手动让网络请求直接报错，这样我们就可以在AVURLAsset请求前拦截还做一些自定义操作例如对URI里的链接解密，或者把URI返回的Key做进一步操作
 
@@ -106,7 +106,7 @@ AVPlayerItem *item = [[AVPlayerItem alloc] initWithAsset: urlAsset];
 ```
 - (BOOL)resourceLoader:(AVAssetResourceLoader *)resourceLoader shouldWaitForLoadingOfRequestedResource:(AVAssetResourceLoadingRequest *)loadingRequest;
 ```  
-####(2) 修改HLS 返回的M3u8文件中Key的链接,让这个链接也回调到上面的方法中
+#### (2) 修改HLS 返回的M3u8文件中Key的链接,让这个链接也回调到上面的方法中
 在回调中通过  NSString *url = [[[loadingRequest request] URL] absoluteString];
 获取返回字符串 判断如果 @"m3u8Scheme://error.m3u8"就替换为我们记录好准备要请求的内容并将链接内key链接替换为一个错误的链接这样就能让这个链接也回调到上面的方法中
 
@@ -155,7 +155,7 @@ AVPlayerItem *item = [[AVPlayerItem alloc] initWithAsset: urlAsset];
     return result;
 }
 ```  
-####(3) 修复Key中多余的"\n" 
+#### (3) 修复Key中多余的"\n" 
 
 ``` 
     if (![url hasSuffix: @".ts"] && ![url isEqualToString: @"m3u8Scheme://error.m3u8"]) {
@@ -211,7 +211,7 @@ AVPlayerItem *item = [[AVPlayerItem alloc] initWithAsset: urlAsset];
 }
 ``` 
  
-####(3) 替换剩余.ts的请求头 
+#### (4) 替换剩余.ts的请求头 
 因为最开始我们替换了M3u8的请求链接导致后续的所有ts获取文件时系统会以这个这个头作为请求地址所以我们需要在把这里替换回来 
 
 ``` 
